@@ -1,6 +1,9 @@
 package com.springboot.ecommerce.controller;
 
+import com.springboot.ecommerce.config.AppConstants;
 import com.springboot.ecommerce.model.Category;
+import com.springboot.ecommerce.payload.CategoryDTO;
+import com.springboot.ecommerce.payload.CategoryResponse;
 import com.springboot.ecommerce.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -16,30 +19,41 @@ public class CategoryController {
 
     private CategoryService categoryService;
 
+//    Only for learning purpose
+//    @GetMapping("/echo")
+//    public ResponseEntity<String> echoMessage(@RequestParam(name = "message") String message) {
+//        return new ResponseEntity<>("Echoed message: "+message, HttpStatus.OK);
+//    }
+
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
     @GetMapping("/public/categories")
-    public ResponseEntity<List<Category>> getAllCategories(){
+    public ResponseEntity<CategoryResponse> getAllCategories(
+            @RequestParam(name = "pageNumber",defaultValue = AppConstants.PAGE_NUMBER,required = false) Integer pageNumber,
+            @RequestParam(name = "pageSize",defaultValue = AppConstants.PAGE_SIZE,required = false) Integer pageSize,
+            @RequestParam(name = "sortBy",defaultValue = AppConstants.SORT_CATEGORIES_BY,required = false) String sortBy,
+            @RequestParam(name = "sortOrder",defaultValue = AppConstants.SORT_DIR,required = false) String sortOrder
+    ){
 
-        List<Category> categories = categoryService.getAllCategories();
-        return new ResponseEntity<>(categories,HttpStatus.OK);
+        CategoryResponse categoryResponse = categoryService.getAllCategories(pageNumber, pageSize,sortBy,sortOrder);
+        return new ResponseEntity<>(categoryResponse,HttpStatus.OK);
     }
 
     @PostMapping("/public/categories")
-    public ResponseEntity<String> createCategory(@Valid @RequestBody Category category){
+    public ResponseEntity<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO categoryDTO){
 
-        categoryService.createCategory(category);
-        return new ResponseEntity<>("Category added successfully",HttpStatus.CREATED);
+        CategoryDTO savedCategoryDTO=categoryService.createCategory(categoryDTO);
+        return new ResponseEntity<>(savedCategoryDTO,HttpStatus.CREATED);
     }
 
     @DeleteMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId){
+    public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long categoryId){
 
 
-        String status = categoryService.deleteCategory(categoryId);
-        return new ResponseEntity<>(status,HttpStatus.OK);
+        CategoryDTO deletedCategory = categoryService.deleteCategory(categoryId);
+        return new ResponseEntity<>(deletedCategory,HttpStatus.OK);
 
 //        Since we do not want any business logic part here we removed it
 //        try {
@@ -54,11 +68,11 @@ public class CategoryController {
     }
 
     @PutMapping("/admin/categories/{categoryId}")
-    public ResponseEntity<String> updateCategory(@Valid @PathVariable Long categoryId,@RequestBody Category category){
+    public ResponseEntity<CategoryDTO> updateCategory(@Valid @PathVariable Long categoryId,@RequestBody CategoryDTO categoryDTO){
 
 
-        Category savedCategory=categoryService.updateCategory(category,categoryId);
-        return new ResponseEntity<>("Category updated for id: "+categoryId,HttpStatus.OK);
+        CategoryDTO savedCategoryDTO=categoryService.updateCategory(categoryDTO,categoryId);
+        return new ResponseEntity<>(savedCategoryDTO,HttpStatus.OK);
 
 
 //        Same goes here too no business logic here all handled in serviceImpl
